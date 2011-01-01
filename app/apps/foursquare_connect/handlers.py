@@ -14,12 +14,17 @@ class VenueListHandler(RequestHandler, SessionMixin):
             return self.redirect("/foursquare-login")
         fs = self.session["fs"]
         
-        try:
-            venues = fs.user()
-        except foursquare.FoursquareException:
-            return self.redirect("/foursquare-login")
+        # NOTE: Do we always have the right fs in session?
+        history = foursquare.all_history(fs)
+        venues = {}
+        for checkin in history:
+            if checkin["venue"]["id"] in venues:
+                continue
+            venues[checkin["venue"]["id"]] = {
+                "name": checkin["venue"]["name"]
+            }
         
-        return render_response("foursquare_login_successful.html", message=venues)
+        return render_response("venue_list.html", venues=venues)
 
 
 class LoginHandler(RequestHandler, SessionMixin):
